@@ -24,18 +24,36 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
 
     const database = client.db('Products-list');
     const shopProducts = database.collection('products');
+    const addToCart = database.collection('cartId');
 
-    // fing one product
+    // ******************************   Product add ****************************
+    // products adding
+    app.post('/products', async (req, res) => {
+      const product = req.body;
+      const result = await shopProducts.insertOne(product);
+      res.send(result);
+    });
+
+
+    // ******************************   Product Get ****************************
+    //  get all products
+    app.get('/products', async (req, res) => {
+      const products = await shopProducts.find().toArray();
+      res.send(products);
+    });
+
+    // get one product
     app.get('/products/:id', async (req, res) => {
       const id = req.params.id;
       const product = await shopProducts.findOne({ _id: new ObjectId(id) });
       res.send(product);
     });
 
+    // ****************************** product update ****************************
     // updating product
     app.put('/products/:id', async (req, res) => {
       const id = req.params.id;
@@ -49,21 +67,27 @@ async function run() {
       res.send(result);
     });
 
-    // products adding
-    app.post('/products', async (req, res) => {
-      const product = req.body;
-      const result = await shopProducts.insertOne(product);
-      res.send(result);
-    });
+    // ******************* add to cart product form frontend ********************************
 
-    // products getting
-    app.get('/products', async (req, res) => {
-      const products = await shopProducts.find().toArray();
+
+    app.post('/products/addtocart', (req, res) => {
+      const addToCartIds = req.body
+      console.log(addToCartIds);
+      const result = addToCart.insertOne(addToCartIds)
+      res.send(result);
+
+    })
+
+    // ******************** add to car id get ****************
+
+    app.get('/add-to-cart', async (req, res) => {
+      const products = await addToCart.find().toArray();
       res.send(products);
     });
 
+
     // Send a ping to confirm a successful connection
-    // await client.db('admin').command({ ping: 1 });
+    await client.db('admin').command({ ping: 1 });
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     );
